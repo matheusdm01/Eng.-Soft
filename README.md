@@ -12,10 +12,10 @@ Repositório de exemplo para as atividades da disciplina de Engenharia de Softwa
 ## Sobre o Projeto
 
 ### Título
-Título do Projeto
+Projeto de Engenharia de Software
 
 ### Descrição
-Descrição do seu projeto.
+Este projeto tem como objetivo mostrar as atividades realizadas na disciplina de Engenharia de Software da UFRN.
 
 ### Componentes
 - FLÁVIO JOSÉ NUNES DE SOUZA

@@ -1,0 +1,45 @@
+### **User Story 1: Adicionar eventos**
+
+#### **Frente (Descrição, Prioridade, Estimativa)**:
+
+* **Descrição**: Como usuário da agenda virtual, quero poder adicionar eventos com data, hora e descrição, para que eu possa organizar minha agenda de forma prática.
+* **Prioridade**: Alta
+* **Estimativa**: 3 pontos
+
+#### **Verso (Critérios de Aceitação)**:
+
+* O usuário pode inserir o título, a data, a hora de início e a descrição do evento.
+* O evento é salvo na agenda e visível no formato de visualização selecionado (diário, semanal, mensal).
+* O sistema permite editar ou excluir eventos já criados.
+
+---
+
+### **User Story 2: Lembretes de compromissos**
+
+#### **Frente (Descrição, Prioridade, Estimativa)**:
+
+* **Descrição**: Como usuário da agenda virtual, quero ser notificado com lembretes antes dos meus compromissos, para que eu possa garantir que não esquecerei de nenhum evento importante.
+* **Prioridade**: Média
+* **Estimativa**: 5 pontos
+
+#### **Verso (Critérios de Aceitação)**:
+
+* O usuário pode definir o tempo de antecedência do lembrete (ex: 10 minutos, 1 hora, 1 dia).
+* O lembrete é enviado via notificação no celular ou por e-mail.
+* O usuário pode configurar a frequência do lembrete para eventos recorrentes.
+
+---
+
+### **User Story 3: Visualização de agenda em diferentes formatos**
+
+#### **Frente (Descrição, Prioridade, Estimativa)**:
+
+* **Descrição**: Como usuário da agenda virtual, quero poder visualizar minha agenda em diferentes formatos (diário, semanal, mensal), para que eu possa facilitar o acompanhamento dos meus compromissos.
+* **Prioridade**: Alta
+* **Estimativa**: 4 pontos
+
+#### **Verso (Critérios de Aceitação)**:
+
+* O usuário pode alternar entre as visualizações diária, semanal e mensal.
+* A agenda exibe os eventos e compromissos em cada uma das visualizações de maneira clara.
+* A transição entre os formatos de visualização deve ser intuitiva e rápida.

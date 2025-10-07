@@ -69,9 +69,10 @@ Eng.-Soft/
 
 - LICENSE: termos da licença do projeto (MIT).
 - README.md: este arquivo de apresentação.
-- X: descrição do diretório X.
-- Y: descrição do diretório Y.
-- Z: descrição do diretório Z.
+- User Stories: Arquivo contendo 3 User Stories sobre do projeto de agenda virtual.
+- Diagrama comportamental.drawio.png: A imagem do diagrama comportamental das User Stories.
+- Diagrama_estrutural.drawio.svg: A imagem do diagrama estrutural das User Stories.
+- Diagramas.txt: Arquivo de texto contendo explicações sobre as finalidades do uso dos diagramas comportamental e estrutural.
 
 ## Licença
 

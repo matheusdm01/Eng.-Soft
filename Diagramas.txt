@@ -1,5 +1,16 @@
 DIAGRAMA ESTRUTURAL:
+-> FINALIDADE: O objetivo desse tipo de diagrama é planejar a estrutura lógica do sistema antes de codificar. 
+--> Ele serve para:
+    1. Modelar as classes e suas relações — define quais objetos existirão no sistema e como eles se conectam (ex: um usuário tem tarefas).
+    2. Organizar responsabilidades — mostra o que cada classe deve fazer, evitando duplicação de funções ou confusão de papéis.
+    3. Facilitar comunicação — ajuda a equipe (ou até você mesmo no futuro) a entender rapidamente a lógica do sistema.
+    4. Servir como guia para implementação — cada classe e método representado ali pode ser transformado em código real depois.
 
+--> Criar o diagrama antes de escrever o código é vantajoso porque:
+    1. Evita retrabalho: você pensa na estrutura antes de codificar, reduzindo chances de precisar reescrever partes do código depois.
+    2. Garante coerência: ajuda a manter a consistência de nomes, tipos e relações entre classes.
+    3. Facilita manutenção: qualquer pessoa pode entender o sistema sem ler o código inteiro.
+    4. Permite detectar problemas cedo: relações mal pensadas (como dependências cíclicas ou classes sobrecarregadas) aparecem no diagrama antes de virar um erro de implementação.
 
 
 DIAGRAMA COMPORTAMENTAL:

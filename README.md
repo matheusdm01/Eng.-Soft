@@ -61,9 +61,10 @@ Isso criará uma cópia local do repositório em sua máquina.
 Eng.-Soft/
 ├── LICENSE
 ├── README.md
-├── <diretório-x>/
-├── <diretório-y>/
-└── <diretório-z>/
+├── Diagrama_comportamental.drawio.png
+├── Diagrama_estrutural.drawio.svg
+└── Diagramas.txt
+└── User_Stories
 ```
 
 - LICENSE: termos da licença do projeto (MIT).

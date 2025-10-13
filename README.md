@@ -64,7 +64,7 @@ Eng.-Soft/
 ├── Diagrama_comportamental.drawio.png
 ├── Diagrama_estrutural.drawio.svg
 ├── Diagramas.txt
-├──Principios_de_Projeto
+├── Principios_de_Projeto
 └── User_Stories
 ```
 

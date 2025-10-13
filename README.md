@@ -63,7 +63,8 @@ Eng.-Soft/
 ├── README.md
 ├── Diagrama_comportamental.drawio.png
 ├── Diagrama_estrutural.drawio.svg
-└── Diagramas.txt
+├── Diagramas.txt
+├──Principios_de_Projeto
 └── User_Stories
 ```
 
@@ -73,6 +74,7 @@ Eng.-Soft/
 - Diagrama comportamental.drawio.png: A imagem do diagrama comportamental das User Stories.
 - Diagrama_estrutural.drawio.svg: A imagem do diagrama estrutural das User Stories.
 - Diagramas.txt: Arquivo de texto contendo explicações sobre as finalidades do uso dos diagramas comportamental e estrutural.
+- Principios_de_Projeto: Arquivo contendo uma breve explicações de alguns principios de engenharia de software e como eles estão implementados nesse projeto.
 
 ## Licença
 

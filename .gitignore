@@ -1,0 +1,15 @@
+*.log
+*.pot
+*.pyc
+_pycache_
+db.sqlite3
+/media
+venv/
+media/
+.env
+.vscode
+apps/*/migrations/
+*/migrations/*
+!**/migrations
+!**/migrations/_init_.py
+apps/*/migrations/

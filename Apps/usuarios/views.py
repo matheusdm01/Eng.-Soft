@@ -1,8 +1,9 @@
 from django.shortcuts import render
 
-def login(request):
+def login_view(request):
+    # Página de login (estática por enquanto)
+    return render(request, 'usuarios/login.html')
 
-    context = {
-        
-    }
-    return render(request, 'index.html', context)
+def kanban_view(request):
+    # Página principal (kanban)
+    return render(request, 'usuarios/kanban.html')

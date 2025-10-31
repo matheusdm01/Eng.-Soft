@@ -20,9 +20,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', include('tarefas.urls')),
     path('admin/', admin.site.urls),
-    path('obras/', include('usuarios.urls')),
+    path('', include('Apps.usuarios.urls')),  # o app de login é o principal
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

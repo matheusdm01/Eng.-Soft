@@ -1,0 +1,15 @@
+{% extends 'usuarios/base.html' %}
+{% load static %}
+
+{% block title %}Login - Agenda Virtual{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2>Login</h2>
+    <form action="/kanban/" method="get">
+        <input type="text" placeholder="Usuário" name="username" required>
+        <input type="password" placeholder="Senha" name="password" required>
+        <button type="submit">Entrar</button>
+    </form>
+</div>
+{% endblock %}

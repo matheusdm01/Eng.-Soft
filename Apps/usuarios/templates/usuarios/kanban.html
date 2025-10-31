@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Minha Agenda - Kanban</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <nav class="navbar">
+        <h1>Minha Agenda</h1>
+        <button onclick="logout()">Sair</button>
+    </nav>
+
+    <div class="kanban-container">
+        <div class="kanban-column" data-status="pendente">
+            <h2>Pendentes</h2>
+            <div class="task" draggable="true" data-title="Estudar Django" data-desc="Revisar views e templates.">
+                Estudar Django
+                <span class="delete-btn">❌</span>
+            </div>
+            <div class="task" draggable="true" data-title="Organizar agenda" data-desc="Criar estrutura de dias e horários.">
+                Organizar agenda
+                <span class="delete-btn">❌</span>
+            </div>
+            <button class="add-task-btn">+ Adicionar Tarefa</button>
+        </div>
+
+        <div class="kanban-column" data-status="fazendo">
+            <h2>Fazendo</h2>
+            <div class="task" draggable="true" data-title="Montar frontend" data-desc="Finalizar design do Kanban.">
+                Montar frontend
+                <span class="delete-btn">❌</span>
+            </div>
+            <button class="add-task-btn">+ Adicionar Tarefa</button>
+        </div>
+
+        <div class="kanban-column" data-status="concluido">
+            <h2>Concluídas</h2>
+            <div class="task" draggable="true" data-title="Criar estrutura do projeto" data-desc="Configurar Django e pastas.">
+                Criar estrutura do projeto
+                <span class="delete-btn">❌</span>
+            </div>
+            <button class="add-task-btn">+ Adicionar Tarefa</button>
+        </div>
+    </div>
+
+    <!-- ===== MODAL DETALHES TAREFA ===== -->
+    <div id="taskModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle">Título da Tarefa</h2>
+            <p id="modalDesc">Descrição da tarefa...</p>
+
+            <h3>Subtarefas</h3>
+            <ul id="subtaskList"></ul>
+
+            <div class="subtask-input">
+                <input type="text" id="newSubtaskInput" placeholder="Adicionar sub-tarefa...">
+                <button id="addSubtaskBtn">Adicionar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

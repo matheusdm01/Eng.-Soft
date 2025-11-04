@@ -15,42 +15,93 @@
     <div class="kanban-container">
         <div class="kanban-column" data-status="pendente">
             <h2>Pendentes</h2>
-            <div class="task" draggable="true" data-title="Estudar Django" data-desc="Revisar views e templates.">
+
+            <div class="task" draggable="true"
+                 data-title="Estudar Django"
+                 data-desc="Revisar views e templates."
+                 data-created="2025-10-30"
+                 data-deadline="2025-11-05"
+                 data-file=""
+                 data-subtasks='[{"title":"Ler documentação","done":true},{"title":"Revisar projeto antigo","done":false}]'>
                 Estudar Django
+                <span class="done-btn">✅</span>
                 <span class="delete-btn">❌</span>
             </div>
-            <div class="task" draggable="true" data-title="Organizar agenda" data-desc="Criar estrutura de dias e horários.">
+
+            <div class="task" draggable="true"
+                 data-title="Organizar agenda"
+                 data-desc="Criar estrutura de dias e horários."
+                 data-created="2025-10-28"
+                 data-deadline="2025-11-06"
+                 data-file=""
+                 data-subtasks="[]">
                 Organizar agenda
+                <span class="done-btn">✅</span>
                 <span class="delete-btn">❌</span>
             </div>
+
             <button class="add-task-btn">+ Adicionar Tarefa</button>
         </div>
 
         <div class="kanban-column" data-status="fazendo">
             <h2>Fazendo</h2>
-            <div class="task" draggable="true" data-title="Montar frontend" data-desc="Finalizar design do Kanban.">
+
+            <div class="task" draggable="true"
+                 data-title="Montar frontend"
+                 data-desc="Finalizar design do Kanban."
+                 data-created="2025-10-29"
+                 data-deadline="2025-11-10"
+                 data-file=""
+                 data-subtasks='[{"title":"Criar HTML","done":true},{"title":"Criar CSS","done":false}]'>
                 Montar frontend
+                <span class="done-btn">✅</span>
                 <span class="delete-btn">❌</span>
             </div>
+
             <button class="add-task-btn">+ Adicionar Tarefa</button>
         </div>
 
         <div class="kanban-column" data-status="concluido">
             <h2>Concluídas</h2>
-            <div class="task" draggable="true" data-title="Criar estrutura do projeto" data-desc="Configurar Django e pastas.">
+
+            <div class="task" draggable="true"
+                 data-title="Criar estrutura do projeto"
+                 data-desc="Configurar Django e pastas."
+                 data-created="2025-10-20"
+                 data-deadline="2025-10-25"
+                 data-file=""
+                 data-subtasks="[]">
                 Criar estrutura do projeto
+                <span class="done-btn">✅</span>
                 <span class="delete-btn">❌</span>
             </div>
+
             <button class="add-task-btn">+ Adicionar Tarefa</button>
         </div>
     </div>
 
-    <!-- ===== MODAL DETALHES TAREFA ===== -->
+    <!-- ===== MODAL ===== -->
     <div id="taskModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 id="modalTitle">Título da Tarefa</h2>
-            <p id="modalDesc">Descrição da tarefa...</p>
+
+            <div class="task-form">
+                <label for="taskTitle">Título:</label>
+                <input type="text" id="taskTitle">
+
+                <label for="taskDesc">Descrição:</label>
+                <textarea id="taskDesc" rows="3"></textarea>
+
+                <label for="taskCreated">Data de criação:</label>
+                <input type="date" id="taskCreated">
+
+                <label for="taskDeadline">Prazo:</label>
+                <input type="date" id="taskDeadline">
+
+                <label for="taskFile">Arquivo:</label>
+                <input type="text" id="taskFile" placeholder="URL ou nome do arquivo...">
+            </div>
 
             <h3>Subtarefas</h3>
             <ul id="subtaskList"></ul>
@@ -58,6 +109,10 @@
             <div class="subtask-input">
                 <input type="text" id="newSubtaskInput" placeholder="Adicionar sub-tarefa...">
                 <button id="addSubtaskBtn">Adicionar</button>
+            </div>
+
+            <div class="modal-actions">
+                <button id="saveTaskBtn">Salvar</button>
             </div>
         </div>
     </div>

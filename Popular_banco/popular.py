@@ -4,6 +4,8 @@ from random import choice
 import os
 import sys
 import django
+from django.utils.timezone import make_aware
+from django.utils import timezone
 
 # --- Configuração do Django ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -36,11 +38,13 @@ print(f"{len(usuarios_df)} usuários carregados (ou já existentes).")
 usuarios = list(Usuario.objects.all())
 
 # --- Popular o banco de tarefas ---
+# ---- Criar todas as tarefas e armazenar por índice ---
+tarefa_map = {}  # chave: ID real da tarefa, valor: objeto CardTarefa
+
 for _, row in tarefas_df.iterrows():
     responsavel = choice(usuarios) if usuarios else None
     prazo = None
 
-    # Tenta converter a data de forma flexível
     if not pd.isna(row["prazo"]):
         data_str = str(row["prazo"]).strip()
         try:
@@ -50,12 +54,14 @@ for _, row in tarefas_df.iterrows():
                 prazo = datetime.strptime(data_str, "%Y-%m-%d")
             except ValueError:
                 try:
-                    # Pandas consegue ler formatos mistos (excel, etc)
                     prazo = pd.to_datetime(row["prazo"])
                 except Exception:
                     prazo = None
 
-    CardTarefa.objects.create(
+    if prazo is not None and timezone.is_naive(prazo):
+        prazo = make_aware(prazo)
+
+    tarefa = CardTarefa.objects.create(
         titulo=row["titulo"],
         descricao=row["descricao"],
         prazo=prazo,
@@ -63,4 +69,15 @@ for _, row in tarefas_df.iterrows():
         concluido=bool(row["concluido"])
     )
 
-print(f"{len(tarefas_df)} tarefas carregadas.")
+    tarefa_map[tarefa.id] = tarefa  # usa o ID real como chave
+
+# ---- Associar subtarefas ---
+for tarefa_id, tarefa in tarefa_map.items():
+    row = tarefas_df.loc[tarefas_df.index[tarefa_id - 1]]  # cuidado: só funciona se IDs forem sequenciais
+
+    subtarefas_ids = str(row.get("subtarefas_ids", "")).strip()
+    if subtarefas_ids:
+        ids = [int(x) for x in subtarefas_ids.split(",") if x.strip().isdigit()]
+        subtarefas = [tarefa_map[i] for i in ids if i in tarefa_map]
+        tarefa.subtarefas.set(subtarefas)
+        # print(f"Associando subtarefas para tarefa {tarefa.id}: {ids}")

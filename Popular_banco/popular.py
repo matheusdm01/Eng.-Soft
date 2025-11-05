@@ -1,19 +1,25 @@
-import os
-import django
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from random import choice
+import os
+import sys
+import django
 
-# --- CONFIGURA DJANGO ---
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Gestao_de_atividades")
+# --- Configuração do Django ---
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(BASE_DIR)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "Gestao_de_atividades.settings")
 django.setup()
 
-from usuarios.models import Usuario
-from tarefas.models import CardTarefa
+# --- Importa os modelos ---
+from Apps.usuarios.models import Usuario
+from Apps.tarefas.models import CardTarefa
 
-# --- 1️⃣ CARREGA USUÁRIOS ---
-usuarios_df = pd.read_excel("usuarios.xlsx")
+# --- Leitura das planilhas ---
+usuarios_df = pd.read_excel("Popular_banco/usuarios.xlsx")
+tarefas_df = pd.read_excel("Popular_banco/tarefas.xlsx")
 
+# --- Popular o banco de usuários ---
 for _, row in usuarios_df.iterrows():
     email = row["email"]
     if not Usuario.objects.filter(email=email).exists():
@@ -24,19 +30,32 @@ for _, row in usuarios_df.iterrows():
             phone=row["phone"],
             password=row["senha"]
         )
-print(f"✅ {len(usuarios_df)} usuários carregados (ou já existentes).")
+print(f"{len(usuarios_df)} usuários carregados (ou já existentes).")
 
-# --- 2️⃣ CARREGA TAREFAS ---
-tarefas_df = pd.read_excel("tarefas.xlsx")
+# --- Lista de usuários disponíveis ---
 usuarios = list(Usuario.objects.all())
 
+# --- Popular o banco de tarefas ---
 for _, row in tarefas_df.iterrows():
     responsavel = choice(usuarios) if usuarios else None
     prazo = None
-    if not pd.isna(row["prazo"]):
-        prazo = datetime.strptime(str(row["prazo"]), "%Y-%m-%d")
 
-    tarefa = CardTarefa.objects.create(
+    # Tenta converter a data de forma flexível
+    if not pd.isna(row["prazo"]):
+        data_str = str(row["prazo"]).strip()
+        try:
+            prazo = datetime.strptime(data_str, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            try:
+                prazo = datetime.strptime(data_str, "%Y-%m-%d")
+            except ValueError:
+                try:
+                    # Pandas consegue ler formatos mistos (excel, etc)
+                    prazo = pd.to_datetime(row["prazo"])
+                except Exception:
+                    prazo = None
+
+    CardTarefa.objects.create(
         titulo=row["titulo"],
         descricao=row["descricao"],
         prazo=prazo,
@@ -44,4 +63,4 @@ for _, row in tarefas_df.iterrows():
         concluido=bool(row["concluido"])
     )
 
-print(f"✅ {len(tarefas_df)} tarefas carregadas.")
+print(f"{len(tarefas_df)} tarefas carregadas.")

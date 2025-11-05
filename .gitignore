@@ -8,8 +8,11 @@ venv/
 media/
 .env
 .vscode
-apps/*/migrations/
+Apps/*/migrations/
 */migrations/*
 !**/migrations
 !**/migrations/_init_.py
-apps/*/migrations/
+Apps/*/migrations
+Apps/**/_pycache_
+Apps/**/migrations/__pycache__
+Gestao_de_atividades/_pycache_

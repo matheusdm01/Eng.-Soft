@@ -2,7 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import RegexValidator
 
-from usuarios.models import Usuario
+from Apps.usuarios.models import Usuario
 
 class CardTarefa(models.Model):
     titulo = models.CharField(max_length=250)

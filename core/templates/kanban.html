@@ -14,69 +14,72 @@
 
     <div class="kanban-container">
         <div class="kanban-column" data-status="pendente">
-            <h2>Pendentes</h2>
-
-            <div class="task" draggable="true"
-                 data-title="Estudar Django"
-                 data-desc="Revisar views e templates."
-                 data-created="2025-10-30"
-                 data-deadline="2025-11-05"
-                 data-file=""
-                 data-subtasks='[{"title":"Ler documentação","done":true},{"title":"Revisar projeto antigo","done":false}]'>
-                Estudar Django
-                <span class="done-btn">✅</span>
-                <span class="delete-btn">❌</span>
+            <div>
+                <h2>Pendentes </h2>
+                <button class="add-task-btn">+ Adicionar Tarefa</button>
             </div>
-
-            <div class="task" draggable="true"
-                 data-title="Organizar agenda"
-                 data-desc="Criar estrutura de dias e horários."
-                 data-created="2025-10-28"
-                 data-deadline="2025-11-06"
-                 data-file=""
-                 data-subtasks="[]">
-                Organizar agenda
-                <span class="done-btn">✅</span>
-                <span class="delete-btn">❌</span>
-            </div>
-
-            <button class="add-task-btn">+ Adicionar Tarefa</button>
+            {% for atividade in atividades_pendentes %}
+                <div class="task" draggable="true"
+                    data-title="{{atividade.titulo}}"
+                    data-desc="{{atividade.descricao}}"
+                    data-created="{{atividade.data_criacao|date:'d/m/Y H:i'}}"
+                    data-deadline="{{atividade.prazo|date:'d/m/Y H:i'}}"
+                    {% if atividade.arquivo %}
+                        data-file="{{ atividade.arquivo.url }}"
+                    {% else %}
+                        data-file=""
+                    {% endif %}
+                    data-subtasks='[{"title":"Ler documentação","done":true},{"title":"Revisar projeto antigo","done":false}]'>
+                    {{atividade.titulo}}
+                    <span class="done-btn">✅</span>
+                    <span class="delete-btn">❌</span>
+                </div>
+            {% endfor %}
+            {% comment %} <button class="add-task-btn">+ Adicionar Tarefa</button> {% endcomment %}
         </div>
 
         <div class="kanban-column" data-status="fazendo">
             <h2>Fazendo</h2>
-
-            <div class="task" draggable="true"
-                 data-title="Montar frontend"
-                 data-desc="Finalizar design do Kanban."
-                 data-created="2025-10-29"
-                 data-deadline="2025-11-10"
-                 data-file=""
-                 data-subtasks='[{"title":"Criar HTML","done":true},{"title":"Criar CSS","done":false}]'>
-                Montar frontend
-                <span class="done-btn">✅</span>
-                <span class="delete-btn">❌</span>
-            </div>
-
-            <button class="add-task-btn">+ Adicionar Tarefa</button>
+            {% for atividade in atividades_fazendo %}
+                <div class="task" draggable="true"
+                    data-title="{{atividade.titulo}}"
+                    data-desc="{{atividade.descricao}}"
+                    data-created="{{atividade.data_criacao|date:'d/m/Y H:i'}}"
+                    data-deadline="{{atividade.prazo|date:'d/m/Y H:i'}}"
+                    {% if atividade.arquivo %}
+                        data-file="{{ atividade.arquivo.url }}"
+                    {% else %}
+                        data-file=""
+                    {% endif %}
+                    data-subtasks='[{"title":"Ler documentação","done":true},{"title":"Revisar projeto antigo","done":false}]'>
+                    {{atividade.titulo}}
+                    <span class="done-btn">✅</span>
+                    <span class="delete-btn">❌</span>
+                </div>
+            {% endfor %}
+            {% comment %} <button class="add-task-btn">+ Adicionar Tarefa</button> {% endcomment %}
         </div>
 
         <div class="kanban-column" data-status="concluido">
             <h2>Concluídas</h2>
-
-            <div class="task" draggable="true"
-                 data-title="Criar estrutura do projeto"
-                 data-desc="Configurar Django e pastas."
-                 data-created="2025-10-20"
-                 data-deadline="2025-10-25"
-                 data-file=""
-                 data-subtasks="[]">
-                Criar estrutura do projeto
-                <span class="done-btn">✅</span>
-                <span class="delete-btn">❌</span>
-            </div>
-
-            <button class="add-task-btn">+ Adicionar Tarefa</button>
+            {% for atividade in atividades_concluidas %}
+                    <div class="task" draggable="true"
+                        data-title="{{atividade.titulo}}"
+                        data-desc="{{atividade.descricao}}"
+                        data-created="{{atividade.data_criacao|date:'d/m/Y H:i'}}"
+                        data-deadline="{{atividade.prazo|date:'d/m/Y H:i'}}"
+                        {% if atividade.arquivo %}
+                            data-file="{{ atividade.arquivo.url }}"
+                        {% else %}
+                            data-file=""
+                        {% endif %}
+                        data-subtasks='[{"title":"Ler documentação","done":true},{"title":"Revisar projeto antigo","done":false}]'>
+                        {{atividade.titulo}}
+                        <span class="done-btn">✅</span>
+                        <span class="delete-btn">❌</span>
+                    </div>
+                {% endfor %}
+            {% comment %} <button class="add-task-btn">+ Adicionar Tarefa</button> {% endcomment %}
         </div>
     </div>
 

@@ -1,4 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
+    // URL base da sua API Django. AJUSTE ISSO para o seu endpoint real!
+    const API_URL = '/api/tarefas/'; 
+
     const columns = document.querySelectorAll(".kanban-column");
     const addButtons = document.querySelectorAll(".add-task-btn");
     const modal = document.getElementById("taskModal");
@@ -8,36 +11,236 @@ document.addEventListener("DOMContentLoaded", function () {
     const addSubtaskBtn = document.getElementById("addSubtaskBtn");
     const newSubtaskInput = document.getElementById("newSubtaskInput");
     const saveTaskBtn = document.getElementById("saveTaskBtn");
+    // Novo elemento para o link de download
+    const downloadLink = document.getElementById("fileDownloadLink"); 
 
-    let currentTask = null;  // tarefa principal ou subtarefa atual
-    let currentParent = null; // tarefa que possui a subtarefa aberta
+    // Variável para armazenar a tarefa principal sendo editada/visualizada (o elemento DOM)
+    let currentTaskElement = null;
+    
+    // ===================================
+    // FUNÇÕES DE UTILIDADE E AJAX
+    // ===================================
 
-    /* ============================
-       ABRIR MODAL PARA NOVA TAREFA
-    ============================ */
+    // Função para obter o CSRF Token (necessário para segurança do Django)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookies[i].substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    // Função genérica para requisições Fetch/AJAX (CREATE, READ, UPDATE, DELETE)
+    async function apiRequest(url, method, data = null) {
+        const options = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken,
+            },
+        };
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        try {
+            const response = await fetch(url, options);
+            if (response.ok) {
+                if (method === 'DELETE' || response.status === 204) {
+                    return {}; 
+                }
+                return await response.json();
+            } else {
+                const error = await response.json().catch(() => ({ detail: 'Erro desconhecido.' }));
+                console.error("API Error:", error);
+                alert(`Erro na requisição ${method} (${response.status}): ${JSON.stringify(error.detail || error)}`);
+                return null;
+            }
+        } catch (error) {
+            console.error("Fetch Error:", error);
+            alert("Erro de conexão com o servidor ou de rede.");
+            return null;
+        }
+    }
+    
+    // ===================================
+    // LÓGICA DO MODAL (CREATE/VIEW/UPDATE)
+    // ===================================
+
+    /* ABRIR MODAL PARA NOVA TAREFA (CREATE) */
     addButtons.forEach(btn => {
         btn.addEventListener("click", () => {
             const column = btn.closest(".kanban-column");
             modal.dataset.mode = "create";
             modal.dataset.column = column.dataset.status;
-
+            modal.dataset.taskId = ""; 
+            modalTitle.textContent = "Criar Nova Tarefa";
+            
+            // Limpa e preenche o formulário
             document.getElementById("taskTitle").value = "";
             document.getElementById("taskDesc").value = "";
-            document.getElementById("taskCreated").value = new Date().toISOString().slice(0,10);
+            document.getElementById("taskCreated").value = new Date().toISOString().slice(0,10); 
             document.getElementById("taskDeadline").value = "";
             document.getElementById("taskFile").value = "";
-            subtaskList.innerHTML = "";
+            
+            // Limpa o link de download
+            downloadLink.style.display = 'none';
 
-            currentTask = null;
-            currentParent = null;
+            subtaskList.innerHTML = "<li>Subtarefas só podem ser adicionadas após a criação da tarefa principal.</li>";
+            addSubtaskBtn.disabled = true;
 
+            currentTaskElement = null;
             modal.style.display = "block";
         });
     });
 
-    /* ============================
-       APLICAR EVENTOS NAS TAREFAS
-    ============================ */
+    /* ABRIR MODAL AO CLICAR NA TAREFA (VIEW/UPDATE) */
+    function openTaskModal(taskElement) {
+        const taskId = taskElement.dataset.id;
+        if (!taskId) return; 
+
+        currentTaskElement = taskElement;
+        modal.dataset.mode = "view";
+        modal.dataset.taskId = taskId;
+        modalTitle.textContent = taskElement.dataset.title;
+
+        // Obtém a URL do arquivo do atributo data-file
+        const fileUrl = taskElement.dataset.file;
+        
+        // Preenche o formulário com os dados do elemento DOM
+        document.getElementById("taskTitle").value = taskElement.dataset.title;
+        document.getElementById("taskDesc").value = taskElement.dataset.desc;
+        document.getElementById("taskCreated").value = taskElement.dataset.created;
+        document.getElementById("taskDeadline").value = taskElement.dataset.deadline;
+        document.getElementById("taskFile").value = fileUrl; // Preenche o input (readonly)
+        
+        // ===============================================
+        // LÓGICA DE DOWNLOAD DO ARQUIVO
+        // ===============================================
+        if (fileUrl) {
+            // 1. Define a URL no link
+            downloadLink.href = fileUrl;
+            
+            // 2. Tenta extrair o nome do arquivo para exibir no link
+            try {
+                // A função decodeURIComponent é importante para nomes de arquivo com espaços ou caracteres especiais
+                const fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+                downloadLink.textContent = `📥 Baixar: ${decodeURIComponent(fileName)}`;
+            } catch (e) {
+                downloadLink.textContent = `📥 Baixar Arquivo`;
+            }
+            
+            // 3. Torna o link visível
+            downloadLink.style.display = 'inline';
+        } else {
+            // Se não houver arquivo, esconde o link
+            downloadLink.style.display = 'none';
+            downloadLink.href = '#';
+        }
+        // ===============================================
+
+
+        // NOVO: Renderiza as subtarefas usando os dados JSON pré-carregados no HTML
+        const subtasksJson = taskElement.dataset.subtasks;
+        renderSubtasks(subtasksJson); 
+        addSubtaskBtn.disabled = false;
+
+        modal.style.display = "block";
+    }
+
+    /* SALVAR TAREFA DO MODAL (CREATE/UPDATE) */
+    saveTaskBtn.addEventListener("click", async () => {
+        const title = document.getElementById("taskTitle").value.trim();
+        const desc = document.getElementById("taskDesc").value.trim();
+        const deadline = document.getElementById("taskDeadline").value || null; 
+        // O campo de arquivo agora é readonly e não deve ser editado aqui. 
+        // Se precisar editar, remova o readonly.
+        const file = document.getElementById("taskFile").value.trim() || null;
+
+        if (!title) {
+            alert("O título da tarefa é obrigatório!");
+            return;
+        }
+
+        const taskData = {
+            titulo: title,
+            descricao: desc,
+            prazo: deadline,
+            arquivo: file,
+        };
+
+        let success = false;
+        let resultTask = null;
+
+        if (modal.dataset.mode === "create") {
+            resultTask = await apiRequest(API_URL, 'POST', taskData);
+
+            if (resultTask) {
+                const newStatus = "pendente"; 
+                const column = document.querySelector(`.kanban-column[data-status="${newStatus}"]`);
+                const newTaskElement = createNewTaskElement(resultTask, newStatus);
+                column.insertBefore(newTaskElement, column.querySelector(".add-task-btn").parentNode.nextSibling); 
+                success = true;
+            }
+
+        } else if (modal.dataset.mode === "view" && currentTaskElement) {
+            const taskId = currentTaskElement.dataset.id;
+            
+            resultTask = await apiRequest(`${API_URL}${taskId}/`, 'PATCH', taskData);
+            
+            if (resultTask) {
+                updateTaskElement(currentTaskElement, resultTask);
+                success = true;
+            }
+        }
+        
+        if (success) {
+            modal.style.display = "none";
+        }
+    });
+
+    // ===================================
+    // MANIPULAÇÃO DO DOM PÓS-API
+    // ===================================
+    
+    /* CRIA NOVO ELEMENTO DOM DE TAREFA */
+    function createNewTaskElement(task, status) {
+        const newTask = document.createElement("div");
+        newTask.classList.add("task");
+        newTask.setAttribute("draggable", "true");
+        newTask.dataset.id = task.pk;
+        newTask.dataset.status = status; 
+        newTask.dataset.title = task.titulo;
+        newTask.dataset.desc = task.descricao;
+        newTask.dataset.created = new Date().toISOString().slice(0,10); 
+        newTask.dataset.deadline = task.prazo ? task.prazo.slice(0, 10) : '';
+        newTask.dataset.file = task.arquivo || '';
+        newTask.dataset.subtasks = '[]'; 
+        newTask.innerHTML = `${task.titulo} <span class="done-btn">✅</span> <span class="delete-btn">❌</span>`;
+
+        applyTaskEvents(newTask);
+        return newTask;
+    }
+
+    /* ATUALIZA ELEMENTO DOM DE TAREFA */
+    function updateTaskElement(element, taskData) {
+        element.dataset.title = taskData.titulo;
+        element.dataset.desc = taskData.descricao;
+        element.dataset.deadline = taskData.prazo ? taskData.prazo.slice(0, 10) : '';
+        element.dataset.file = taskData.arquivo || '';
+        element.childNodes[0].nodeValue = taskData.titulo; 
+        modalTitle.textContent = taskData.titulo; 
+    }
+
+    /* APLICA EVENTOS NAS TAREFAS (EDITAR, DELETAR, CONCLUIR) */
     function applyTaskEvents(task) {
         const deleteBtn = task.querySelector(".delete-btn");
         const doneBtn = task.querySelector(".done-btn");
@@ -46,48 +249,52 @@ document.addEventListener("DOMContentLoaded", function () {
         task.addEventListener("dragstart", () => task.classList.add("dragging"));
         task.addEventListener("dragend", () => task.classList.remove("dragging"));
 
-        // Excluir
-        deleteBtn.addEventListener("click", e => {
+        // Excluir (DELETE)
+        deleteBtn.addEventListener("click", async (e) => {
             e.stopPropagation();
-            task.remove();
+            if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+                const taskId = task.dataset.id;
+                const success = await apiRequest(`${API_URL}${taskId}/`, 'DELETE'); 
+                if (success !== null) {
+                    task.remove();
+                }
+            }
         });
 
-        // Concluir tarefa
+        // Concluir tarefa (PATCH)
         doneBtn.addEventListener("click", e => {
             e.stopPropagation();
-            moveTaskTo("concluido", task);
+            updateTaskStatus("concluido", task, true); 
         });
 
         // Abrir modal ao clicar na tarefa
         task.addEventListener("click", e => {
             if (e.target.classList.contains("delete-btn") || e.target.classList.contains("done-btn")) return;
-
-            currentTask = task;
-            currentParent = null;
-            modal.dataset.mode = "view";
-            modalTitle.textContent = task.dataset.title;
-
-            document.getElementById("taskTitle").value = task.dataset.title;
-            document.getElementById("taskDesc").value = task.dataset.desc;
-            document.getElementById("taskCreated").value = task.dataset.created;
-            document.getElementById("taskDeadline").value = task.dataset.deadline;
-            document.getElementById("taskFile").value = task.dataset.file;
-
-            renderSubtasks(task);
-            modal.style.display = "block";
+            openTaskModal(task);
         });
     }
 
     // Inicialmente aplica eventos nas tarefas existentes
     document.querySelectorAll(".task").forEach(applyTaskEvents);
 
-    /* ============================
-       RENDERIZAR SUBTAREFAS COM CHECKBOX
-    ============================ */
-    function renderSubtasks(task) {
+    // ===================================
+    // LÓGICA DE SUBTAREFAS
+    // ===================================
+
+    /* RENDERIZAR SUBTAREFAS (USANDO DADOS PRÉ-CARREGADOS) */
+    function renderSubtasks(subtasksJson) {
         subtaskList.innerHTML = "";
         let subtasks = [];
-        try { subtasks = JSON.parse(task.dataset.subtasks || "[]"); } catch {}
+        try { 
+            subtasks = JSON.parse(subtasksJson || "[]"); 
+        } catch (e) {
+            console.error("Erro ao fazer parse das subtarefas:", e);
+        }
+
+        if (subtasks.length === 0) {
+            subtaskList.innerHTML = "<li>Nenhuma subtarefa adicionada.</li>";
+            return;
+        }
 
         subtasks.forEach((st) => {
             const li = document.createElement("li");
@@ -96,11 +303,22 @@ document.addEventListener("DOMContentLoaded", function () {
             const checkbox = document.createElement("input");
             checkbox.type = "checkbox";
             checkbox.checked = st.done;
+            checkbox.dataset.subtaskId = st.id;
 
-            checkbox.addEventListener("change", () => {
-                st.done = checkbox.checked;
-                task.dataset.subtasks = JSON.stringify(subtasks);
-                checkTaskProgress(task);
+            // Evento para marcar/desmarcar subtarefa
+            checkbox.addEventListener("change", async () => {
+                const SUBTASK_API_URL = `${API_URL}${st.id}/`; 
+                const data = { concluido: checkbox.checked };
+                
+                const updatedSubtask = await apiRequest(SUBTASK_API_URL, 'PATCH', data);
+                
+                if (updatedSubtask) {
+                    st.done = checkbox.checked;
+                    // Note: A tarefa principal precisa ser recarregada ou ter seu status recalculado 
+                    // no front-end após a conclusão de subtarefas para atualizar o Kanban.
+                } else {
+                    checkbox.checked = !checkbox.checked; 
+                }
             });
 
             const label = document.createElement("span");
@@ -109,178 +327,97 @@ document.addEventListener("DOMContentLoaded", function () {
 
             li.appendChild(checkbox);
             li.appendChild(label);
-
-            // Abrir modal para subtarefa ao clicar no label
-            label.addEventListener("click", () => openSubtask(st, task));
-
             subtaskList.appendChild(li);
         });
     }
 
-    /* ============================
-       ADICIONAR SUBTAREFA
-    ============================ */
-    addSubtaskBtn.addEventListener("click", () => {
-        const text = newSubtaskInput.value.trim();
-        if (!text || !currentTask) return;
+    /* ADICIONAR SUBTAREFA (REQUER ENDPOINT DE API DEDICADO) */
+    addSubtaskBtn.addEventListener("click", async () => {
+        const title = newSubtaskInput.value.trim();
+        const parentId = modal.dataset.taskId;
+        if (!title || !parentId) return;
 
-        const subtask = { title: text, done: false, subtasks: [] };
-        let subtasks = [];
-        try { subtasks = JSON.parse(currentTask.dataset.subtasks || "[]"); } catch {}
-        subtasks.push(subtask);
-
-        currentTask.dataset.subtasks = JSON.stringify(subtasks);
-        renderSubtasks(currentTask);
-        newSubtaskInput.value = "";
+        alert("ATENÇÃO: A criação de subtarefas requer a implementação do endpoint de API para criar e associar a tarefa filha.");
+        
+        // CÓDIGO DE EXEMPLO PARA CRIAÇÃO DE SUBTAREFA (REQUER API NO BACKEND)
+        /*
+        const data = { titulo: title, parent_tarefas: parentId }; 
+        const newSubtask = await apiRequest(API_URL, 'POST', data); 
+        
+        if (newSubtask) {
+            newSubtaskInput.value = "";
+            alert(`Subtarefa "${title}" criada. Recarregue a página para vê-la no modal.`);
+        }
+        */
     });
 
-    /* ============================
-       ABRIR SUBTAREFA NO MODAL
-    ============================ */
-    function openSubtask(subtask, parentTask) {
-        currentTask = subtask;
-        currentParent = parentTask;
-        modal.dataset.mode = "view";
-        modalTitle.textContent = subtask.title;
+    // ===================================
+    // LÓGICA DE MOVER E DRAG & DROP
+    // ===================================
 
-        document.getElementById("taskTitle").value = subtask.title;
-        document.getElementById("taskDesc").value = subtask.desc || "";
-        document.getElementById("taskCreated").value = subtask.created || "";
-        document.getElementById("taskDeadline").value = subtask.deadline || "";
-        document.getElementById("taskFile").value = subtask.file || "";
+    /* ATUALIZAR STATUS DA TAREFA (PATCH) */
+    async function updateTaskStatus(newStatus, taskElement, setConcluido = false) {
+        const taskId = taskElement.dataset.id;
+        let concluido = setConcluido;
 
-        subtaskList.innerHTML = "";
-        (subtask.subtasks || []).forEach(st => {
-            const li = document.createElement("li");
-            li.classList.add("subtask-item");
+        if (newStatus === "concluido") {
+             concluido = true;
+        } else if (newStatus === "pendente" || newStatus === "fazendo") {
+            concluido = false;
+        }
+        
+        const data = { concluido: concluido };
 
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.checked = st.done;
-            checkbox.addEventListener("change", () => {
-                st.done = checkbox.checked;
-                subtask.dataset.subtasks = JSON.stringify(subtask.subtasks);
-                checkTaskProgress(parentTask);
-            });
-
-            const label = document.createElement("span");
-            label.textContent = st.title;
-            label.style.marginLeft = "8px";
-
-            li.appendChild(checkbox);
-            li.appendChild(label);
-            label.addEventListener("click", () => openSubtask(st, subtask));
-
-            subtaskList.appendChild(li);
-        });
-
-        modal.style.display = "block";
-    }
-
-    /* ============================
-       VERIFICAR PROGRESSO DA TAREFA
-    ============================ */
-    function checkTaskProgress(task) {
-        let subtasks = [];
-        try { subtasks = JSON.parse(task.dataset.subtasks || "[]"); } catch {}
-
-        const total = subtasks.length;
-        const doneCount = subtasks.filter(st => st.done).length;
-        const status = task.closest(".kanban-column").dataset.status;
-
-        if (doneCount === total && total > 0) {
-            moveTaskTo("concluido", task);
-        } else if (doneCount > 0 && doneCount < total && status !== "fazendo") {
-            moveTaskTo("fazendo", task);
-        } else if (doneCount === 0 && status !== "pendente") {
-            moveTaskTo("pendente", task);
+        const updatedTask = await apiRequest(`${API_URL}${taskId}/`, 'PATCH', data);
+        
+        if (updatedTask) {
+            moveTaskTo(newStatus, taskElement);
+            taskElement.dataset.status = newStatus; 
         }
     }
-
-    /* ============================
-       MOVER TAREFA PARA COLUNA
-    ============================ */
+    
+    /* MOVER TAREFA PARA COLUNA */
     function moveTaskTo(status, task) {
         const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
         if (column) {
-            column.insertBefore(task, column.querySelector(".add-task-btn"));
+            column.insertBefore(task, column.querySelector(".add-task-btn").parentNode.nextSibling); 
         }
     }
 
-    /* ============================
-       SALVAR TAREFA DO MODAL
-    ============================ */
-    saveTaskBtn.addEventListener("click", () => {
-        const title = document.getElementById("taskTitle").value.trim();
-        const desc = document.getElementById("taskDesc").value.trim();
-        const created = document.getElementById("taskCreated").value;
-        const deadline = document.getElementById("taskDeadline").value;
-        const file = document.getElementById("taskFile").value;
-
-        if (!title) return;
-
-        if (modal.dataset.mode === "create") {
-            const column = document.querySelector(`.kanban-column[data-status="${modal.dataset.column}"]`);
-            const newTask = document.createElement("div");
-            newTask.classList.add("task");
-            newTask.setAttribute("draggable", "true");
-            newTask.dataset.title = title;
-            newTask.dataset.desc = desc;
-            newTask.dataset.created = created;
-            newTask.dataset.deadline = deadline;
-            newTask.dataset.file = file;
-            newTask.dataset.subtasks = "[]";
-            newTask.innerHTML = `${title} <span class="done-btn">✅</span> <span class="delete-btn">❌</span>`;
-
-            applyTaskEvents(newTask);
-            column.insertBefore(newTask, column.querySelector(".add-task-btn"));
-        } else if (modal.dataset.mode === "view" && currentTask) {
-            currentTask.dataset.title = title;
-            currentTask.dataset.desc = desc;
-            currentTask.dataset.created = created;
-            currentTask.dataset.deadline = deadline;
-            currentTask.dataset.file = file;
-
-            if (!currentTask.classList.contains("task")) {
-                // É uma subtarefa: atualiza apenas o label no modal
-                renderSubtasks(currentParent || currentTask);
-            } else {
-                currentTask.querySelector(".done-btn").previousSibling.textContent = title;
-            }
-        }
-
-        modal.style.display = "none";
-    });
-
-    /* ============================
-       FECHAR MODAL
-    ============================ */
-    closeModal.addEventListener("click", () => {
-        modal.style.display = "none";
-    });
-
-    window.addEventListener("click", e => {
-        if (e.target === modal) modal.style.display = "none";
-    });
-
-    /* ============================
-       DRAG & DROP
-    ============================ */
+    /* DRAG & DROP EVENTOS */
     columns.forEach(col => {
         col.addEventListener("dragover", e => {
             e.preventDefault();
+            col.classList.add("drag-over");
             const dragging = document.querySelector(".dragging");
-            const afterElement = getDragAfterElement(col, e.clientY);
-            if (afterElement == null) {
-                col.insertBefore(dragging, col.querySelector(".add-task-btn"));
-            } else {
-                col.insertBefore(dragging, afterElement);
+            if (dragging) {
+                const afterElement = getDragAfterElement(col, e.clientY);
+                if (afterElement == null) {
+                    col.appendChild(dragging); 
+                } else {
+                    col.insertBefore(dragging, afterElement);
+                }
+            }
+        });
+        
+        col.addEventListener("dragleave", () => {
+            col.classList.remove("drag-over");
+        });
+
+        col.addEventListener("drop", e => {
+            e.preventDefault();
+            col.classList.remove("drag-over");
+            const dragging = document.querySelector(".dragging");
+            if (dragging) {
+                const newStatus = col.dataset.status;
+                updateTaskStatus(newStatus, dragging);
             }
         });
     });
 
+    // Encontra o elemento (tarefa) que está abaixo do cursor durante o drag
     function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll(".task:not(.dragging):not(.add-task-btn)")];
+        const draggableElements = [...container.querySelectorAll(".task:not(.dragging)")];
 
         return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();
@@ -292,4 +429,16 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
+    
+    // ===================================
+    // FECHAR MODAL
+    // ===================================
+    
+    closeModal.addEventListener("click", () => {
+        modal.style.display = "none";
+    });
+
+    window.addEventListener("click", e => {
+        if (e.target === modal) modal.style.display = "none";
+    });
 });

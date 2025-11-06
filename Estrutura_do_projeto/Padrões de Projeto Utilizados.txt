@@ -2,6 +2,7 @@ Padrões de Projeto Utilizados:
 Fábrica: Utilizado no sistema de templates, middlewares e databases configurados via dicionários. 
 Possui como benefício o seu uso para adicionar, substituir ou configurar componentes sem alterar o código proncipal
 bastando apenas alterar o nome das classes nas configurações;
+
 Strategy Pattern (Estratégia):
 Na configuração de Password Validators, Template Backends e Email Backend.
 Cada componente segue uma mesma interface, mas pode ter diferentes implementações (por exemplo, MinimumLengthValidator, NumericPasswordValidator etc.).
@@ -73,5 +74,6 @@ Reutiliza variáveis como BASE_DIR e PROJECT_ROOT em vários lugares.
 8. Extensibilidade:
 
 Estrutura preparada para adicionar backends, middlewares e apps sem alterar código base.
+
 
 Facilita manutenção e evolução do sistema.

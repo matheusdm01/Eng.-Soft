@@ -1,0 +1,15 @@
+{% extends 'login/base.html' %}
+{% load static %}
+
+{% block title %}Login - Agenda Virtual{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <h2>Login</h2>
+    <form action="{% url 'login' %}" method="POST"> {% csrf_token %}
+        <input type="text" placeholder="E-mail" name="email" required>
+        <input type="password" placeholder="Senha" name="password" required>
+        <button type="submit">Entrar</button>
+    </form>
+</div>
+{% endblock %}

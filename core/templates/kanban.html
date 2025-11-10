@@ -32,7 +32,7 @@
                     data-subtasks='{{ atividade.subtarefas_json|safe }}' 
                     >
                     {{atividade.titulo}}
-                    <span class="done-btn">✅</span>
+                    <span class="done-btn"> - 📌 {{atividade.get_progresso}}%</span>
                     <span class="delete-btn">❌</span>
                 </div>
             {% endfor %}
@@ -52,7 +52,7 @@
                     data-subtasks='{{ atividade.subtarefas_json|safe }}' 
                     >
                     {{atividade.titulo}}
-                    <span class="done-btn">✅</span>
+                    <span class="done-btn"> - 🔄 {{atividade.get_progresso}}%</span>
                     <span class="delete-btn">❌</span>
                 </div>
             {% endfor %}

@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // URL base da sua API Django. AJUSTE ISSO para o seu endpoint real!
+    // URL base da sua API Django. Deve ser '/api/tarefas/' se você usou as rotas sugeridas.
     const API_URL = '/api/tarefas/'; 
 
     const columns = document.querySelectorAll(".kanban-column");
@@ -11,8 +11,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const addSubtaskBtn = document.getElementById("addSubtaskBtn");
     const newSubtaskInput = document.getElementById("newSubtaskInput");
     const saveTaskBtn = document.getElementById("saveTaskBtn");
-    // Novo elemento para o link de download
-    const downloadLink = document.getElementById("fileDownloadLink"); 
+    // O elemento de download não está no seu HTML, por isso não é mais necessário
+    // const downloadLink = document.getElementById("fileDownloadLink"); 
 
     // Variável para armazenar a tarefa principal sendo editada/visualizada (o elemento DOM)
     let currentTaskElement = null;
@@ -57,11 +57,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (method === 'DELETE' || response.status === 204) {
                     return {}; 
                 }
-                return await response.json();
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.indexOf("application/json") !== -1) {
+                    return await response.json();
+                }
+                return {};
             } else {
-                const error = await response.json().catch(() => ({ detail: 'Erro desconhecido.' }));
+                const errorText = await response.text();
+                let error = { detail: 'Erro desconhecido.' };
+                try {
+                    error = JSON.parse(errorText);
+                } catch (e) {
+                    error.detail = errorText || 'Erro de resposta do servidor.';
+                }
+                
                 console.error("API Error:", error);
-                alert(`Erro na requisição ${method} (${response.status}): ${JSON.stringify(error.detail || error)}`);
+                alert(`Erro na requisição ${method} (${response.status}): ${JSON.stringify(error.detail || error.error || error)}`);
                 return null;
             }
         } catch (error) {
@@ -87,13 +98,11 @@ document.addEventListener("DOMContentLoaded", function () {
             // Limpa e preenche o formulário
             document.getElementById("taskTitle").value = "";
             document.getElementById("taskDesc").value = "";
+            // Usa a data de hoje como sugestão de criação
             document.getElementById("taskCreated").value = new Date().toISOString().slice(0,10); 
             document.getElementById("taskDeadline").value = "";
             document.getElementById("taskFile").value = "";
             
-            // Limpa o link de download
-            downloadLink.style.display = 'none';
-
             subtaskList.innerHTML = "<li>Subtarefas só podem ser adicionadas após a criação da tarefa principal.</li>";
             addSubtaskBtn.disabled = true;
 
@@ -112,7 +121,6 @@ document.addEventListener("DOMContentLoaded", function () {
         modal.dataset.taskId = taskId;
         modalTitle.textContent = taskElement.dataset.title;
 
-        // Obtém a URL do arquivo do atributo data-file
         const fileUrl = taskElement.dataset.file;
         
         // Preenche o formulário com os dados do elemento DOM
@@ -120,35 +128,12 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById("taskDesc").value = taskElement.dataset.desc;
         document.getElementById("taskCreated").value = taskElement.dataset.created;
         document.getElementById("taskDeadline").value = taskElement.dataset.deadline;
-        document.getElementById("taskFile").value = fileUrl; // Preenche o input (readonly)
+        document.getElementById("taskFile").value = fileUrl;
         
-        // ===============================================
-        // LÓGICA DE DOWNLOAD DO ARQUIVO
-        // ===============================================
-        if (fileUrl) {
-            // 1. Define a URL no link
-            downloadLink.href = fileUrl;
-            
-            // 2. Tenta extrair o nome do arquivo para exibir no link
-            try {
-                // A função decodeURIComponent é importante para nomes de arquivo com espaços ou caracteres especiais
-                const fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
-                downloadLink.textContent = `📥 Baixar: ${decodeURIComponent(fileName)}`;
-            } catch (e) {
-                downloadLink.textContent = `📥 Baixar Arquivo`;
-            }
-            
-            // 3. Torna o link visível
-            downloadLink.style.display = 'inline';
-        } else {
-            // Se não houver arquivo, esconde o link
-            downloadLink.style.display = 'none';
-            downloadLink.href = '#';
-        }
-        // ===============================================
+        // Nota: A lógica de download foi removida daqui, pois a tag não existe no seu HTML.
+        // Se precisar de download, adicione <a id="fileDownloadLink"></a> ao seu modal.
 
-
-        // NOVO: Renderiza as subtarefas usando os dados JSON pré-carregados no HTML
+        // Renderiza as subtarefas usando os dados JSON pré-carregados no HTML
         const subtasksJson = taskElement.dataset.subtasks;
         renderSubtasks(subtasksJson); 
         addSubtaskBtn.disabled = false;
@@ -160,9 +145,8 @@ document.addEventListener("DOMContentLoaded", function () {
     saveTaskBtn.addEventListener("click", async () => {
         const title = document.getElementById("taskTitle").value.trim();
         const desc = document.getElementById("taskDesc").value.trim();
-        const deadline = document.getElementById("taskDeadline").value || null; 
-        // O campo de arquivo agora é readonly e não deve ser editado aqui. 
-        // Se precisar editar, remova o readonly.
+        // Os inputs tipo="date" retornam "" se vazios, o que é tratado no views.py
+        const deadline = document.getElementById("taskDeadline").value; 
         const file = document.getElementById("taskFile").value.trim() || null;
 
         if (!title) {
@@ -181,12 +165,14 @@ document.addEventListener("DOMContentLoaded", function () {
         let resultTask = null;
 
         if (modal.dataset.mode === "create") {
+            // Requisição POST para criar nova tarefa principal
             resultTask = await apiRequest(API_URL, 'POST', taskData);
 
             if (resultTask) {
                 const newStatus = "pendente"; 
                 const column = document.querySelector(`.kanban-column[data-status="${newStatus}"]`);
                 const newTaskElement = createNewTaskElement(resultTask, newStatus);
+                // Insere a nova tarefa logo após o botão "Adicionar Tarefa"
                 column.insertBefore(newTaskElement, column.querySelector(".add-task-btn").parentNode.nextSibling); 
                 success = true;
             }
@@ -194,6 +180,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } else if (modal.dataset.mode === "view" && currentTaskElement) {
             const taskId = currentTaskElement.dataset.id;
             
+            // Requisição PATCH para atualizar tarefa principal
             resultTask = await apiRequest(`${API_URL}${taskId}/`, 'PATCH', taskData);
             
             if (resultTask) {
@@ -216,12 +203,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const newTask = document.createElement("div");
         newTask.classList.add("task");
         newTask.setAttribute("draggable", "true");
-        newTask.dataset.id = task.pk;
+        // pk do Django
+        newTask.dataset.id = task.pk; 
         newTask.dataset.status = status; 
         newTask.dataset.title = task.titulo;
         newTask.dataset.desc = task.descricao;
-        newTask.dataset.created = new Date().toISOString().slice(0,10); 
-        newTask.dataset.deadline = task.prazo ? task.prazo.slice(0, 10) : '';
+        newTask.dataset.created = task.data_criacao || new Date().toISOString().slice(0,10); 
+        newTask.dataset.deadline = task.prazo || '';
         newTask.dataset.file = task.arquivo || '';
         newTask.dataset.subtasks = '[]'; 
         newTask.innerHTML = `${task.titulo} <span class="done-btn">✅</span> <span class="delete-btn">❌</span>`;
@@ -234,7 +222,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function updateTaskElement(element, taskData) {
         element.dataset.title = taskData.titulo;
         element.dataset.desc = taskData.descricao;
-        element.dataset.deadline = taskData.prazo ? taskData.prazo.slice(0, 10) : '';
+        element.dataset.deadline = taskData.prazo || '';
         element.dataset.file = taskData.arquivo || '';
         element.childNodes[0].nodeValue = taskData.titulo; 
         modalTitle.textContent = taskData.titulo; 
@@ -281,11 +269,48 @@ document.addEventListener("DOMContentLoaded", function () {
     // LÓGICA DE SUBTAREFAS
     // ===================================
 
+    // Função auxiliar para criar o <li> da subtarefa no DOM
+    function createSubtaskListItem(subtaskData, parentId) {
+        const li = document.createElement("li");
+        li.classList.add("subtask-item");
+        li.dataset.subtaskId = subtaskData.id;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = subtaskData.done;
+        
+        // Evento para marcar/desmarcar subtarefa (usa a rota de detalhe com PATCH)
+        checkbox.addEventListener("change", async () => {
+            const SUBTASK_API_URL = `${API_URL}${subtaskData.id}/`; 
+            const data = { concluido: checkbox.checked };
+            
+            const updatedSubtask = await apiRequest(SUBTASK_API_URL, 'PATCH', data);
+            
+            if (updatedSubtask) {
+                subtaskData.done = checkbox.checked;
+                li.style.textDecoration = checkbox.checked ? 'line-through' : 'none';
+                console.log(`Subtarefa ${subtaskData.id} atualizada.`);
+            } else {
+                checkbox.checked = !checkbox.checked; 
+            }
+        });
+
+        const label = document.createElement("span");
+        label.textContent = subtaskData.title;
+        label.style.marginLeft = "8px";
+        li.style.textDecoration = subtaskData.done ? 'line-through' : 'none';
+
+        li.appendChild(checkbox);
+        li.appendChild(label);
+        return li;
+    }
+    
     /* RENDERIZAR SUBTAREFAS (USANDO DADOS PRÉ-CARREGADOS) */
     function renderSubtasks(subtasksJson) {
         subtaskList.innerHTML = "";
         let subtasks = [];
         try { 
+            // O JSON está em formato string, precisamos fazer o parse
             subtasks = JSON.parse(subtasksJson || "[]"); 
         } catch (e) {
             console.error("Erro ao fazer parse das subtarefas:", e);
@@ -296,59 +321,41 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
+        const parentId = modal.dataset.taskId;
         subtasks.forEach((st) => {
-            const li = document.createElement("li");
-            li.classList.add("subtask-item");
-
-            const checkbox = document.createElement("input");
-            checkbox.type = "checkbox";
-            checkbox.checked = st.done;
-            checkbox.dataset.subtaskId = st.id;
-
-            // Evento para marcar/desmarcar subtarefa
-            checkbox.addEventListener("change", async () => {
-                const SUBTASK_API_URL = `${API_URL}${st.id}/`; 
-                const data = { concluido: checkbox.checked };
-                
-                const updatedSubtask = await apiRequest(SUBTASK_API_URL, 'PATCH', data);
-                
-                if (updatedSubtask) {
-                    st.done = checkbox.checked;
-                    // Note: A tarefa principal precisa ser recarregada ou ter seu status recalculado 
-                    // no front-end após a conclusão de subtarefas para atualizar o Kanban.
-                } else {
-                    checkbox.checked = !checkbox.checked; 
-                }
-            });
-
-            const label = document.createElement("span");
-            label.textContent = st.title;
-            label.style.marginLeft = "8px";
-
-            li.appendChild(checkbox);
-            li.appendChild(label);
+            const li = createSubtaskListItem(st, parentId);
             subtaskList.appendChild(li);
         });
     }
 
-    /* ADICIONAR SUBTAREFA (REQUER ENDPOINT DE API DEDICADO) */
+    /* ADICIONAR SUBTAREFA (USA NOVO ENDPOINT DE CRIAÇÃO) */
     addSubtaskBtn.addEventListener("click", async () => {
         const title = newSubtaskInput.value.trim();
-        const parentId = modal.dataset.taskId;
+        const parentId = modal.dataset.taskId; 
         if (!title || !parentId) return;
 
-        alert("ATENÇÃO: A criação de subtarefas requer a implementação do endpoint de API para criar e associar a tarefa filha.");
+        // USA A NOVA ROTA: /api/tarefas/<parent_pk>/subtarefas/
+        const SUBTASK_CREATE_URL = `${API_URL}${parentId}/subtarefas/`; 
         
-        // CÓDIGO DE EXEMPLO PARA CRIAÇÃO DE SUBTAREFA (REQUER API NO BACKEND)
-        /*
-        const data = { titulo: title, parent_tarefas: parentId }; 
-        const newSubtask = await apiRequest(API_URL, 'POST', data); 
+        const data = { 
+            titulo: title
+        }; 
+
+        const newSubtask = await apiRequest(SUBTASK_CREATE_URL, 'POST', data); 
         
         if (newSubtask) {
+            const li = createSubtaskListItem(newSubtask, parentId);
+            
+            // Remove a mensagem de "Nenhuma subtarefa" se ela existir
+            if (subtaskList.querySelector('li').textContent === "Nenhuma subtarefa adicionada.") {
+                subtaskList.innerHTML = '';
+            }
+            
+            subtaskList.appendChild(li);
             newSubtaskInput.value = "";
-            alert(`Subtarefa "${title}" criada. Recarregue a página para vê-la no modal.`);
+            alert(`Subtarefa "${newSubtask.title}" criada com sucesso! Você precisará recarregar a página para que os dados da tarefa principal sejam atualizados.`);
+            newSubtaskInput.value = "";
         }
-        */
     });
 
     // ===================================
@@ -380,7 +387,9 @@ document.addEventListener("DOMContentLoaded", function () {
     function moveTaskTo(status, task) {
         const column = document.querySelector(`.kanban-column[data-status="${status}"]`);
         if (column) {
-            column.insertBefore(task, column.querySelector(".add-task-btn").parentNode.nextSibling); 
+            // Insere antes do próximo elemento (que não seja o botão add-task-btn), ou no final
+            const nextElement = column.querySelector(".add-task-btn").parentNode.nextSibling;
+            column.insertBefore(task, nextElement); 
         }
     }
 
@@ -392,8 +401,10 @@ document.addEventListener("DOMContentLoaded", function () {
             const dragging = document.querySelector(".dragging");
             if (dragging) {
                 const afterElement = getDragAfterElement(col, e.clientY);
+                const nextInsertPoint = col.querySelector(".add-task-btn").parentNode.nextSibling;
+                
                 if (afterElement == null) {
-                    col.appendChild(dragging); 
+                    col.insertBefore(dragging, nextInsertPoint); 
                 } else {
                     col.insertBefore(dragging, afterElement);
                 }
@@ -417,7 +428,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Encontra o elemento (tarefa) que está abaixo do cursor durante o drag
     function getDragAfterElement(container, y) {
-        const draggableElements = [...container.querySelectorAll(".task:not(.dragging)")];
+        // Exclui a div do cabeçalho e o elemento que está sendo arrastado
+        const draggableElements = [...container.querySelectorAll(".task:not(.dragging)")].filter(el => !el.closest('div').querySelector('h2'));
 
         return draggableElements.reduce((closest, child) => {
             const box = child.getBoundingClientRect();

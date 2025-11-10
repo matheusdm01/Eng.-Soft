@@ -32,7 +32,7 @@
                     data-subtasks='{{ atividade.subtarefas_json|safe }}' 
                     >
                     {{atividade.titulo}}
-                    <span class="done-btn">✅</span>
+                    <span class="done-btn"> - 📌 {{atividade.get_progresso}}%</span>
                     <span class="delete-btn">❌</span>
                 </div>
             {% endfor %}
@@ -52,7 +52,7 @@
                     data-subtasks='{{ atividade.subtarefas_json|safe }}' 
                     >
                     {{atividade.titulo}}
-                    <span class="done-btn">✅</span>
+                    <span class="done-btn"> - 🔄 {{atividade.get_progresso}}%</span>
                     <span class="delete-btn">❌</span>
                 </div>
             {% endfor %}
@@ -80,37 +80,37 @@
     </div>
 
     <div id="taskModal" class="modal">
-        {# ... restante do modal ... #}
         <div class="modal-content">
             <span class="close">&times;</span>
             <h2 id="modalTitle">Título da Tarefa</h2>
 
-            <div class="task-form">
-                <label for="taskTitle">Título:</label>
-                <input type="text" id="taskTitle">
+            <div class="modal-body"> 
+                <div class="task-form">
+                    <label for="taskTitle">Título:</label>
+                    <input type="text" id="taskTitle">
 
-                <label for="taskDesc">Descrição:</label>
-                <textarea id="taskDesc" rows="3"></textarea>
+                    <label for="taskDesc">Descrição:</label>
+                    <textarea id="taskDesc" rows="3"></textarea>
+                    
+                    <div>
+                        <label for="taskCreated">Data de criação:</label>
+                        <input type="date" id="taskCreated">
+                    </div>
 
-                <label for="taskCreated">Data de criação:</label>
-                <input type="date" id="taskCreated" readonly>
+                    <div>
+                        <label for="taskDeadline">Prazo:</label>
+                        <input type="date" id="taskDeadline">
+                    </div>
 
-                <label for="taskDeadline">Prazo:</label>
-                <input type="date" id="taskDeadline">
-
-                <label for="taskFile">Arquivo:</label>
-                <input type="text" id="taskFile" placeholder="URL ou nome do arquivo..." readonly>
-
-                <div id="fileDownloadContainer" style="margin-top: 5px;">
-                    <a id="fileDownloadLink" href="#" target="_blank" style="display: none; color: #0052cc; text-decoration: underline;">
-                    Baixar Arquivo
-                    </a>
+                    <div>
+                        <label for="taskFile">Arquivo:</label>
+                        <input type="text" id="taskFile" placeholder="URL ou nome do arquivo...">
+                    </div>
                 </div>
+
+                <h3>Subtarefas</h3>
+                <ul id="subtaskList"></ul>
             </div>
-
-            <h3>Subtarefas</h3>
-            <ul id="subtaskList"></ul>
-
             <div class="subtask-input">
                 <input type="text" id="newSubtaskInput" placeholder="Adicionar sub-tarefa...">
                 <button id="addSubtaskBtn">Adicionar</button>

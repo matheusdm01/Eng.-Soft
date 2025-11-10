@@ -100,3 +100,6 @@ class CardTarefa(models.Model):
             return True  # algo foi modificado
 
         return False  # nada mudou
+    
+    class Meta:
+        ordering = ['-data_criacao']

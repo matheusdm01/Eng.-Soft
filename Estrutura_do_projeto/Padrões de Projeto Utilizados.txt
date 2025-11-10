@@ -1,0 +1,79 @@
+Padrões de Projeto Utilizados:
+Fábrica: Utilizado no sistema de templates, middlewares e databases configurados via dicionários. 
+Possui como benefício o seu uso para adicionar, substituir ou configurar componentes sem alterar o código proncipal
+bastando apenas alterar o nome das classes nas configurações;
+
+Strategy Pattern (Estratégia):
+Na configuração de Password Validators, Template Backends e Email Backend.
+Cada componente segue uma mesma interface, mas pode ter diferentes implementações (por exemplo, MinimumLengthValidator, NumericPasswordValidator etc.).
+
+Benefício:
+Facilita a troca de comportamento (ex.: mudar a forma de validação de senha) sem alterar o código central de autenticação.
+
+Singleton Pattern (Instância Única):
+O módulo de configuração Django settings é um singleton por design.
+Quando o Django carrega o settings.py, ele é mantido como uma única instância acessível globalmente.
+
+Benefício:
+Garante que todas as partes do sistema compartilhem as mesmas configurações e não criem inconsistências.
+
+Template Method Pattern:
+No processo de inicialização e carregamento do projeto Django — o wsgi.py e o manage.py chamam métodos definidos pelo framework que executam etapas padronizadas (por exemplo, django.setup()), onde este arquivo (settings.py) fornece os detalhes específicos.
+
+Benefício:
+Permite customizar o comportamento do framework sem precisar reescrever o fluxo principal.
+
+Dependency Injection (Inversão de Dependência):
+Ao usar o pacote django-environ (environ.Env), as configurações sensíveis (como e-mail e banco de dados) são injetadas por variáveis de ambiente.
+
+Benefício:
+Evita acoplamento com o ambiente de desenvolvimento e facilita a troca de configurações entre desenvolvimento, teste e produção.
+
+
+Boas práticas:
+1. Uso de Variáveis de Ambiente (django-environ):
+
+Centraliza configurações sensíveis (chaves, e-mail, etc.) em um .env.
+
+Segue o princípio 12-Factor App, promovendo segurança e portabilidade.
+
+2. Separação de Responsabilidades:
+
+Cada parte do sistema é configurada separadamente: INSTALLED_APPS, DATABASES, MIDDLEWARE, TEMPLATES, etc.
+
+Isso segue o princípio da responsabilidade única (SRP), do SOLID.
+
+3. Uso do BASE_DIR com pathlib.Path:
+
+Facilita manipulação de caminhos de forma independente de sistema operacional.
+
+Evita erros comuns de concatenação manual com os.path.
+
+4. Padrão de Organização Modular:
+
+O projeto separa apps (Apps.tarefas, Apps.usuarios), respeitando o padrão MVC (Model-View-Controller) do Django (ou MTV: Model-Template-View).
+
+Permite escalabilidade e reuso de módulos.
+
+5. Boas práticas de segurança:
+
+Comentário explícito sobre a importância de manter o SECRET_KEY seguro.
+
+Uso de validações de senha e configuração de CSRF Middleware para evitar ataques.
+
+6. Internacionalização e Timezone:
+
+Uso de LANGUAGE_CODE e TIME_ZONE garante compatibilidade com diferentes regiões, o que é essencial em aplicações globais.
+
+7. Padrão DRY (Don’t Repeat Yourself):
+
+Centraliza configurações em um único arquivo.
+
+Reutiliza variáveis como BASE_DIR e PROJECT_ROOT em vários lugares.
+
+8. Extensibilidade:
+
+Estrutura preparada para adicionar backends, middlewares e apps sem alterar código base.
+
+
+Facilita manutenção e evolução do sistema.

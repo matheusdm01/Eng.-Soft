@@ -25,3 +25,12 @@ def serialize_subtarefas(tarefa):
     
     # Converte a lista em uma string JSON, usando o serializador customizado
     return json.dumps(subtarefas_list, default=default_json_serializer)
+
+def safe_date_format(dt_obj):
+    """Retorna a data no formato YYYY-MM-DD se for um objeto datetime, caso contrário None."""
+    if dt_obj is None or isinstance(dt_obj, str):
+        return None
+    # Se for um datetime, extrai a parte da data e formatamos
+    if hasattr(dt_obj, 'date'):
+        dt_obj = dt_obj.date()
+    return dt_obj.strftime('%Y-%m-%d')

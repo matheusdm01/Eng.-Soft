@@ -1,0 +1,50 @@
+﻿Relatório
+
+
+Introdução:
+        Neste projeto de Banco de Dados (o qual realizamos em conjunto com o projeto de Engenharia de Software), criamos uma agenda virtual com o intuito de fazer com que as pessoas possam se organizar melhor em suas atividades diárias em um ambiente virtual que seja agradável de ser utilizado e possa atender as especificações que à tornem atrativas como o conceito de “gamificação” das tarefas, as quais recompensam o usuário com recompensas criadas por ele mesmo.
+        Para isso foi utilizado o modelo Django na implementação desse projeto, pois com o Django conseguimos implementar as ferramentas necessárias para “dar vida” ao projeto.
+
+
+O projeto (em Django):
+O desenvolvimento do projeto foi realizado utilizando o framework **Django**, que segue o padrão **Model-View-Template (MVT)**. Esse modelo facilitou a organização do código e a separação das responsabilidades entre as camadas de **modelo (Model)**, **visualização (View)** e **apresentação (Template)**, tornando o sistema mais estruturado e de fácil manutenção.
+
+
+Na camada de **Model**, foram definidos os modelos principais que representam as entidades do sistema, como **Usuário** e **Tarefa**. Cada modelo foi implementado como uma classe Python, herdando de `models.Model`, o que permitiu que o Django gerasse automaticamente as tabelas correspondentes no banco de dados relacional.
+
+
+Já na camada de **View**, foram implementadas as funções e classes responsáveis por controlar o fluxo de dados entre o usuário e o sistema. Essas views recebem as requisições HTTP, processam as informações necessárias (acessando os dados via os modelos) e retornam as respostas adequadas, geralmente renderizando páginas HTML.
+
+
+Banco de Dados:
+        Inicialmente o banco de dados foi implementado com um script que preenche as tabelas de forma aleatória a fim de popular o banco para dar início a base do projeto, posteriormente o banco será preenchido à medida que os usuários forem criando as “tarefas” e “subtarefas”. 
+Usuário – Tarefa: relação um-para-muitos, em que cada usuário pode ter diversas tarefas cadastradas.
+
+Tarefa – Categoria: relação muitos-para-um, pois uma tarefa pertence a uma categoria específica.
+Essas relações foram definidas com o uso de chaves estrangeiras (ForeignKey) e foram projetadas para manter a coerência e a integridade referencial entre os dados.
+
+
+
+
+
+
+
+
+
+
+Funcionalidades do Sistema:
+        O sistema foi feito com apenas três colunas de tarefas, as quais são divididas em: Pendente (toda tarefa criada é inicialmente colocada nessa coluna), Em progresso (como o nome já diz, são as tarefas que possuem uma ou mais sub tarefas concluídas mas ainda não estão 100%, elas possuem um sistema de porcentagem que demonstra quanto falta para serem concluídas) e Concluído (aqui ficam armazenadas as tarefas já concluídas pelo usuário).
+        Pensando um pouco mais para frente esse sistema pode ser utilizado para uso pessoal ou para empresas monitorarem o andamento de atividades realizadas pelos seus funcionários, na qual um usuário “chefe” poderá ter acesso às outras agendas dos funcionários e monitorar o andamento das “tarefas” ou trabalhos que estão sendo executados ou que já foram concluídos.
+
+
+Considerações finais:
+        O desenvolvimento deste projeto possibilitou uma compreensão aprofundada sobre o funcionamento de aplicações web modernas e a importância da integração com o banco de dados. A utilização do framework Django mostrou-se uma escolha eficaz, pois proporcionou uma estrutura sólida, segura e escalável, facilitando a implementação dos principais recursos do sistema.
+
+
+A criação da agenda virtual gamificada Demonstrou, na prática, como é possível aplicar conceitos vistos na matéria de banco de dados e engenharia de software para desenvolver uma aplicação completa e funcional. A experiência adquirida durante o processo reforçou a importância de boas práticas de programação, do uso de padrões arquitetônicos e da documentação adequada em todas as etapas do projeto.
+
+
+Além disso, o caráter interdisciplinar deste trabalho contribuiu para o desenvolvimento de habilidades tanto técnicas quanto organizacionais, como trabalho em equipe, divisão de tarefas e versionamento de código. 
+
+
+Como perspectivas futuras, pretende-se aprimorar o sistema com novas funcionalidades, como integração com calendários externos (ex: Google Calendar), notificações automáticas e um sistema de pontuação mais avançado, tornando a experiência do usuário ainda mais interativa e envolvente.

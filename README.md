@@ -5,7 +5,8 @@ Repositório de exemplo para as atividades da disciplina de Engenharia de Softwa
 ## Índice
 
 - [Sobre o Projeto](#sobre-o-projeto)
-- [Como clonar ou baixar](#como-clonar-ou-baixar)  
+- [Como clonar ou baixar](#como-clonar-ou-baixar)
+- [Como rodar o projeto](#como-rodar-o-projeto)
 - [Estrutura do Projeto](#estrutura-do-projeto)  
 - [Licença](#licença)  
 
@@ -51,6 +52,61 @@ Isso criará uma cópia local do repositório em sua máquina.
 2. Clique no botão **Code** (verde).
 3. Selecione **Download ZIP**.
 4. Extraia o arquivo ZIP para o local desejado em seu computador.
+
+## Como rodar o projeto
+
+Após clonar ou baixar o repositório, siga os passos abaixo para executar o projeto localmente:
+
+### 1. Criar uma máquina virtual
+
+```bash
+python -m venv venv
+```
+
+### 2. Ativar a máquina virtual
+
+No **Windows**:
+```bash
+venv\Scripts\activate
+```
+
+No **Linux / macOS**:
+```bash
+source venv/bin/activate
+```
+
+### 3. Instalar as dependências
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Criar as migrações com base nos models
+
+```bash
+python manage.py makemigrations tarefas usuarios
+```
+
+### 5. Aplicar as migrações (criar/atualizar o banco)
+
+```bash
+python manage.py migrate
+```
+
+### 6. Criar um superusuário
+
+```bash
+python manage.py createsuperuser
+```
+
+### 7. Executar o servidor local
+
+```bash
+python manage.py runserver
+```
+
+O projeto estará disponível em:  
+👉 **http://127.0.0.1:8000/**
 
 
 ## Estrutura do Projeto
